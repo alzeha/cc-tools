@@ -6,6 +6,10 @@ import java.io.FileReader;
 
 public class TxtReader extends Main {
 
+	public TxtReader(boolean remote) {
+		super(remote);
+	}
+	
 	private String readFile(String path) {
 		String result = "";
 		BufferedReader reader;
@@ -33,12 +37,32 @@ public class TxtReader extends Main {
 	
 	@Override
 	public void startCovertChannel() {
-		System.out.println("start reading receive file");
-		printOfReceiver = readFile("/home/alli/Desktop/ccnoise/covertChannelUsingTwoProcessesMeasuringSingleAccesses/receiver.txt");
-		System.out.println("start reading send file");
-		printOfSender = readFile("/home/alli/Desktop/ccnoise/covertChannelUsingTwoProcessesMeasuringSingleAccesses/sender.txt");
-		System.out.println("end reading files");
-		
+		if (remote) {
+			try {
+				File home = new File("/home/alzeha/Desktop/");
+				
+				File senderTxt = new File("/home/alzeha/Desktop/sender.txt");
+				senderTxt.delete();
+				
+				File receiverTxt = new File("/home/alzeha/Desktop/receiver.txt");
+				receiverTxt.delete();
+				
+				Runtime.getRuntime().exec("scp alli@deeds:/home/alli/Desktop/ccnoise/covertChannelUsingTwoProcessesMeasuringSingleAccesses/receiver.txt .", null, home);
+
+				Runtime.getRuntime().exec("scp alli@deeds:/home/alli/Desktop/ccnoise/covertChannelUsingTwoProcessesMeasuringSingleAccesses/sender.txt .", null, home);
+				Thread.sleep(1000);
+				printOfReceiver = readFile("/home/alzeha/Desktop/receiver.txt");
+				printOfSender = readFile("/home/alzeha/Desktop/sender.txt");
+
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		else {
+			printOfReceiver = readFile("/home/alli/Desktop/ccnoise/covertChannelUsingTwoProcessesMeasuringSingleAccesses/receiver.txt");
+			printOfSender = readFile("/home/alli/Desktop/ccnoise/covertChannelUsingTwoProcessesMeasuringSingleAccesses/sender.txt");
+		}
 	}
 	
 }

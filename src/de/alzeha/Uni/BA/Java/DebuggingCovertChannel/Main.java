@@ -4,6 +4,12 @@ public class Main {
 	protected String printOfReceiver;
 	protected String printOfSender;
 
+	protected boolean remote;
+	
+	public Main(Boolean remote) {
+		this.remote = remote;
+	}
+	
 	public String getPrintOfSender() {
 		return printOfSender;
 	}

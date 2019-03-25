@@ -7,7 +7,13 @@ import java.util.LinkedList;
  * to use this, enable #define PRINT_READ_AND_WRITE_INTERVALS at the config of the covert channel
  */
 public class Main {
-
+	
+	// variables to configure the tool
+	// runCC means, the covert channel shall be run
+	private static boolean runCC = false;
+	// remote means, we are on a different workstation than the covert channel
+	private static boolean remote = true;
+	
 	private static SendReceiveDataStruct[] limits = new SendReceiveDataStruct[2];
 	
 	private static LinkedList<SendReceiveDataStruct> senderStructs = new LinkedList<SendReceiveDataStruct>();
@@ -66,24 +72,36 @@ public class Main {
 	
 	private static void createReceiveList(String printOfReceiver) {
 		String lines[] = printOfReceiver.split("\\r?\\n");
-		long actualTime;
+		boolean lastWasReceived = false;
+		long actualTime, measuredTime;
 		boolean sendBit;
 		for(int i = 0; i < lines.length; i++ ) {
 			if(lines[i].length() > 14 && lines[i].substring(0, 8).equals("received")) {
 				actualTime = Long.parseUnsignedLong(lines[i].substring(13).replaceAll(" ", ""));
 				sendBit = lines[i].substring(7, 10).contains("1");
 				receiverStructs.add(new SendReceiveDataStruct(false, sendBit, actualTime));
+				lastWasReceived = true;
+				
 			}
+			else {
+				if (lines[i].length() > 15 && lines[i].substring(0, 13).equals("time measured") && lastWasReceived) {
+					measuredTime = Long.parseUnsignedLong( lines[i].substring(15).replaceAll(" ", "") );
+					receiverStructs.getLast().setMeasuredTime(measuredTime);
+				}
+				lastWasReceived = false;
+			}
+			
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
-		
-		// use the commented code, if you want to get the covert channel started from java
-		
-//		de.alzeha.Uni.BA.Java.DebuggingCovertChannel.Main cc = new de.alzeha.Uni.BA.Java.DebuggingCovertChannel.Main();
-		de.alzeha.Uni.BA.Java.DebuggingCovertChannel.Main cc = new de.alzeha.Uni.BA.Java.DebuggingCovertChannel.TxtReader();
+		de.alzeha.Uni.BA.Java.DebuggingCovertChannel.Main cc;
+		if(runCC) {
+			cc = new de.alzeha.Uni.BA.Java.DebuggingCovertChannel.Main(remote);
+		} else {
+			cc = new de.alzeha.Uni.BA.Java.DebuggingCovertChannel.TxtReader(remote);
+		}
 		cc.startCovertChannel();
 		
 		
@@ -98,10 +116,8 @@ public class Main {
 		// senderStructs is sorted, therefore the limits are the highest and lowest
 		limits[0] = senderStructs.getFirst();
 		limits[1] = senderStructs.getLast();
-		System.out.println("before filtering: " + receiverStructs.size());
 		// filter the received
 		filterReceiver();
-		System.out.println("after filtering: " + receiverStructs.size());
 		
 		resultingList = (LinkedList<SendReceiveDataStruct>) senderStructs.clone();
 		resultingList.addAll((LinkedList<SendReceiveDataStruct>) receiverStructs.clone());
@@ -123,6 +139,8 @@ public class Main {
 		
 		private long time;
 		
+		private long measuredTime = 0;
+		
 		public SendReceiveDataStruct(boolean wasFromSender, boolean channelBit, long time) {
 			this.wasFromSender = wasFromSender;
 			this.channelBit = channelBit;
@@ -141,6 +159,14 @@ public class Main {
 			return time;
 		}
 
+		public long getMeasuredTime() {
+			return measuredTime;
+		}
+
+		public void setMeasuredTime(long actual) {
+			measuredTime = actual;
+		}
+		
 		@Override
 		public int compareTo(SendReceiveDataStruct arg0) {
 			if (this.getTime() < arg0.getTime()) {
@@ -172,8 +198,14 @@ public class Main {
 			else {
 				result += "0 ";
 			}
-			
+						
 			result += time;
+			
+			if (!this.getWasFromSender() && this.getMeasuredTime() != 0) {
+				result += " in ";
+				result += this.getMeasuredTime();
+				
+			}
 			
 			return result;
 			
