@@ -4,10 +4,31 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 
-public class TxtReader extends Main {
+public class TxtReader {
+
+	private String printOfReceiver;
+	private String printOfSender;
+	
+
+	private String nameOfProject;
+	
+	private boolean remote;
 
 	public TxtReader(boolean remote) {
-		super(remote);
+		this.remote = remote;
+	}
+	
+	public TxtReader(boolean remote, String nameOfProject) {
+		this.remote = remote;
+		this.nameOfProject = nameOfProject;
+	}
+	
+	public String getPrintOfSender() {
+		return printOfSender;
+	}
+	
+	public String getPrintOfReceiver() {
+		return printOfReceiver;
 	}
 	
 	private String readFile(String path) {
@@ -34,8 +55,6 @@ public class TxtReader extends Main {
 		
 	}
 	
-	
-	@Override
 	public void startCovertChannel() {
 		if (remote) {
 			try {
@@ -47,9 +66,9 @@ public class TxtReader extends Main {
 				File receiverTxt = new File("/home/alzeha/Desktop/receiver.txt");
 				receiverTxt.delete();
 				
-				Runtime.getRuntime().exec("scp alli@deeds:/home/alli/Desktop/ccnoise/covertChannelUsingTwoProcessesMeasuringSingleAccesses/receiver.txt .", null, home);
+				Runtime.getRuntime().exec("scp alli@deeds:/home/alli/Desktop/ccnoise/" + nameOfProject + "/receiver.txt .", null, home);
 
-				Runtime.getRuntime().exec("scp alli@deeds:/home/alli/Desktop/ccnoise/covertChannelUsingTwoProcessesMeasuringSingleAccesses/sender.txt .", null, home);
+				Runtime.getRuntime().exec("scp alli@deeds:/home/alli/Desktop/ccnoise/" +nameOfProject + "/sender.txt .", null, home);
 				Thread.sleep(1000);
 				printOfReceiver = readFile("/home/alzeha/Desktop/receiver.txt");
 				printOfSender = readFile("/home/alzeha/Desktop/sender.txt");
